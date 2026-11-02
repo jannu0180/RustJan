@@ -1,0 +1,1 @@
+{"name":"rustjan-desktop-build-tools","private":true,"version":"1.0.0","description":"Local RustJan desktop build tools","devDependencies":{"@electron/packager":"20.3.0","@resvg/resvg-js":"2.6.2","electron":"45.2.1"}}

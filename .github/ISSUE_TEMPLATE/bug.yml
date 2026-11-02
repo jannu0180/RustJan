@@ -1,0 +1,41 @@
+name: Bug report / Veateade
+description: Report a reproducible RustJan problem without private server/player data.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not attach passwords, conf/logs folders, real IPs, SteamIDs or private chat. / Ära lisa paroole, conf/logs kaustu ega isikuandmeid."
+  - type: input
+    id: version
+    attributes:
+      label: RustJan version
+      placeholder: 1.5.3
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows / Rust / Oxide / Bridge versions, if relevant
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce with demo or isolated test data
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted screenshot or short sanitized error message
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I removed credentials, private addresses and player-identifying information.
+          required: true

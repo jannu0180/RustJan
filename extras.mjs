@@ -1,0 +1,15 @@
+import {readFile,writeFile,mkdir,rename,readdir,realpath} from 'node:fs/promises';
+import {createReadStream} from 'node:fs';
+import {createInterface} from 'node:readline';
+import path from 'node:path';
+export class Extras {
+ constructor(files){this.files=files;this.queue=Promise.resolve();}
+ folder(profile){return path.dirname(path.dirname(this.files.file(profile,'players')));}
+ async links(profile){try{return (await readFile(path.join(this.folder(profile),'plugin.txt'),'utf8')).split('\n').filter(s=>s.trim()).map(line=>JSON.parse(line));}catch(e){if(e.code==='ENOENT')return[];throw e;}}
+ saveLink(profile,{plugin,version,url}){const work=this.queue.then(async()=>{if(!/^[a-zA-Z0-9_.-]{1,100}$/.test(plugin||''))throw Error('Invalid plugin filename');url=String(url||'').trim();if(url){const u=new URL(url);if(!['https:','http:'].includes(u.protocol)||u.username||u.password||url.length>2000)throw Error('Use an http(s) address without credentials');url=u.href;}const rows=(await this.links(profile)).filter(r=>r.plugin!==plugin);if(url)rows.push({plugin,version:String(version||'').slice(0,100),url});const file=path.join(this.folder(profile),'plugin.txt');await mkdir(path.dirname(file),{recursive:true});await writeFile(file+'.tmp',rows.map(r=>JSON.stringify(r)).join('\n')+'\n',{mode:0o600});await rename(file+'.tmp',file);return rows;});this.queue=work.catch(()=>{});return work;}
+ async logFiles(profile,kind){if(!['chat','console'].includes(kind))throw Error('Invalid log kind');let list;try{list=await readdir(this.folder(profile),{withFileTypes:true});}catch(e){if(e.code==='ENOENT')return[];throw e;}const prefix=kind==='chat'?'chat':'konsool',pattern=new RegExp('^'+prefix+'\\.(\\d{4}-\\d{2}-\\d{2})\\..+\\.txt$');return list.filter(e=>e.isFile()&&!e.isSymbolicLink()&&pattern.test(e.name)).map(e=>({name:e.name,date:e.name.match(pattern)[1]})).sort((a,b)=>a.name.localeCompare(b.name));}
+ async archive(profile,{kind,date,search='',cursor='0:0'}){if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))throw Error('Invalid date');if(search.length>200||!/^\d{1,6}:\d{1,12}$/.test(cursor))throw Error('Invalid search/cursor');const files=(await this.logFiles(profile,kind)).filter(f=>f.date===date);if(!files.length)return{rows:[],next:null,files:0};let [index,skip]=cursor.split(':').map(Number);const rows=[];let scanned=0,bytes=0;const query=search.toLowerCase(),folder=await realpath(this.folder(profile));
+  for(;index<files.length;index++,skip=0){const file=await realpath(path.join(folder,files[index].name));if(path.dirname(file)!==folder)throw Error('Invalid archive path');const stream=createReadStream(file,{encoding:'utf8'}),reader=createInterface({input:stream,crlfDelay:Infinity});let line=0;try{for await(const text of reader){line++;if(line<=skip)continue;scanned++;if(!query||text.toLowerCase().includes(query)){const clipped=text.slice(0,16000);rows.push({file:files[index].name,line,text:clipped});bytes+=clipped.length;}if(rows.length>=500||scanned>=100000||bytes>=500000)return{rows,next:index+':'+line,files:files.length};}}finally{reader.close();stream.destroy();}}
+  return{rows,next:null,files:files.length};
+ }
+}

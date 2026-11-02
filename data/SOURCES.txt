@@ -1,0 +1,20 @@
+Offline IP-country database: sapics/ip-location-db, user-country, IPv4 + IPv6.
+https://github.com/sapics/ip-location-db
+https://github.com/sapics/ip-location-db/releases/download/latest/user-country-ipv4-num.csv
+https://github.com/sapics/ip-location-db/releases/download/latest/user-country-ipv6-num.csv
+License: Public Domain Dedication and License v1.0 (PDDL).
+https://opendatacommons.org/licenses/pddl/1-0/
+Downloaded for this build on 2026-11-01. IP geolocation is approximate.
+Runtime lookup is offline; no player IPs are submitted to external services.
+
+Flags: lipis/flag-icons, MIT license. License included in public/flags/LICENSE.
+https://github.com/lipis/flag-icons
+
+Protocol/API references:
+https://docs.oxidemod.com/core/commands/plugin
+https://github.com/OxideMod/Oxide.Rust/blob/develop/src/RustCommands.cs
+https://wiki.facepunch.com/rust/useful_commands
+https://umod.org/plugins/rustadmin-online
+RustJanBridge is a new read-only companion. Its map renderer API matches the
+published MapImageRenderer API used by RustadminOnline. Server runtime API
+compatibility must be confirmed on the user's Rust/Oxide version.

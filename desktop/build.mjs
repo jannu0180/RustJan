@@ -1,0 +1,35 @@
+import {readFile,writeFile,mkdir,cp,readdir,stat} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import path from 'node:path';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+const here=path.dirname(fileURLToPath(import.meta.url)),root=path.dirname(here);
+const tools=path.resolve(process.env.RUSTJAN_DESKTOP_TOOLS||here),require=createRequire(path.join(tools,'package.json'));
+const {Resvg}=require('@resvg/resvg-js');
+const {packager}=await import(pathToFileURL(require.resolve('@electron/packager')));
+const metadata=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
+const target=path.resolve(process.argv[2]||path.join(root,'..','RustJan-Desktop-v'+metadata.version+'-win-x64'));
+try{await stat(target);throw Error('Output already exists: '+target);}catch(e){if(e.code!=='ENOENT')throw e;}
+const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+const work=path.resolve(process.env.RUSTJAN_BUILD_WORK||path.join(root,'..','..','work'),'desktop-'+stamp),stage=path.join(work,'app');
+await mkdir(stage,{recursive:true});
+const svg=await readFile(path.join(root,'public','favicon.svg'),'utf8');
+const images=[16,24,32,48,64,128,256].map(size=>({size,png:Buffer.from(new Resvg(svg,{fitTo:{mode:'width',value:size}}).render().asPng())}));
+const header=Buffer.alloc(6+16*images.length);header.writeUInt16LE(1,2);header.writeUInt16LE(images.length,4);let offset=header.length;
+images.forEach(({size,png},i)=>{const at=6+i*16;header[at]=size===256?0:size;header[at+1]=header[at];header.writeUInt16LE(1,at+4);header.writeUInt16LE(32,at+6);header.writeUInt32LE(png.length,at+8);header.writeUInt32LE(offset,at+12);offset+=png.length;});
+const assets=path.join(here,'assets');await mkdir(assets,{recursive:true});await writeFile(path.join(assets,'rustjan.ico'),Buffer.concat([header,...images.map(i=>i.png)]));await writeFile(path.join(assets,'rustjan.png'),images.at(-1).png);
+for(const entry of await readdir(root,{withFileTypes:true}))if(entry.isFile()&&entry.name.endsWith('.mjs'))await cp(path.join(root,entry.name),path.join(stage,entry.name));
+for(const directory of ['public','server-plugin'])await cp(path.join(root,directory),path.join(stage,directory),{recursive:true,filter:source=>path.resolve(source)!==path.join(root,'public','item-icons')});
+await mkdir(path.join(stage,'data'),{recursive:true});for(const name of ['country-ipv4.csv','country-ipv6.csv','SOURCES.txt'])await cp(path.join(root,'data',name),path.join(stage,'data',name));
+await mkdir(path.join(stage,'desktop','assets'),{recursive:true});for(const name of ['main.mjs','preload.cjs'])await cp(path.join(here,name),path.join(stage,'desktop',name));for(const name of ['rustjan.ico','rustjan.png'])await cp(path.join(assets,name),path.join(stage,'desktop','assets',name));
+await writeFile(path.join(stage,'package.json'),JSON.stringify({name:'rustjan',productName:'RustJan',version:metadata.version,private:true,type:'module',main:'desktop/main.mjs',description:'Rust server monitoring and administration',author:'Jannu'},null,2));
+async function inventory(directory,base=directory){const list=[];for(const item of await readdir(directory,{withFileTypes:true})){const full=path.join(directory,item.name);if(item.isDirectory())list.push(...await inventory(full,base));else list.push(path.relative(base,full).replaceAll('\\','/'));}return list;}
+const files=await inventory(stage);
+if(files.some(f=>/^(?:conf|logs|research|tests|node_modules)\//.test(f)||/credentials\.json|settings\.json|before-reset|\.bak$/.test(f)))throw Error('Private/development data in stage');
+console.log('Packaging '+files.length+' allowlisted files with Electron '+require('electron/package.json').version+'...');
+const paths=await packager({dir:stage,name:'RustJan',platform:'win32',arch:'x64',electronVersion:require('electron/package.json').version,out:path.join(work,'packaged'),asar:true,prune:false,appVersion:metadata.version,buildVersion:metadata.version+'.0',icon:path.join(assets,'rustjan.ico'),win32metadata:{CompanyName:'Jannu',FileDescription:'RustJan server monitor',ProductName:'RustJan',OriginalFilename:'RustJan.exe',InternalName:'RustJan'},quiet:false});
+await cp(paths[0],target,{recursive:true,errorOnExist:true,force:false});
+await cp(path.join(root,'public','item-icons'),path.join(target,'assets','item-icons'),{recursive:true});
+await cp(path.join(root,'server-plugin'),path.join(target,'server-plugin'),{recursive:true});
+await cp(path.join(here,'README-desktop.txt'),path.join(target,'README-desktop.txt'));
+await writeFile(path.join(target,'build-info.json'),JSON.stringify({name:'RustJan',version:metadata.version,electron:require('electron/package.json').version,platform:'win32',arch:'x64',builtAt:new Date().toISOString(),privateDataIncluded:false},null,2));
+console.log('Desktop executable ready: '+path.join(target,'RustJan.exe'));

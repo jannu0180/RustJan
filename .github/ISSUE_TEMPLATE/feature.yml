@@ -1,0 +1,20 @@
+name: Feature request / Ettepanek
+description: Suggest an improvement to RustJan.
+title: "[Feature] "
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Proposed behaviour / Soovitud käitumine
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context (no private server data)

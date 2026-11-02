@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup guides / Seadistusjuhendid
+    url: https://github.com/jannu0180/RustJan#readme
+    about: Read the installation and server-plugin instructions first.
