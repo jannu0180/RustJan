@@ -1,4 +1,4 @@
-RUSTJAN 1.5.3 — WINDOWS DESKTOP TEST / TÖÖLAUARAKENDUSE TEST
+RUSTJAN 1.5.4 — WINDOWS DESKTOP TEST / TÖÖLAUARAKENDUSE TEST
 
 ENGLISH
 Run RustJan.exe. No browser, Node.js installation or administrator rights are needed.

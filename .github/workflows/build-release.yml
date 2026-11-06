@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
-      - run: node --test tests/*.test.mjs
+      - run: node --test --test-concurrency=1 tests/*.test.mjs
       - run: node scripts/fetch-icons.mjs
       - run: npm.cmd ci --prefix desktop
       - name: Build clean desktop folder

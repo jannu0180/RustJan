@@ -6,7 +6,7 @@ Jannu enda vajaduste järgi vibe-kooditud **kohalik Rusti serveri haldusrakendus
 
 ## Käivitamine
 
-1. Ava Releases ja laadi **Assets** alt alla `RustJan-v1.5.3-win-x64.zip`. GitHubi “Source code” ZIP on arendajatele, mitte valmis rakendus.
+1. Ava Releases ja laadi **Assets** alt alla `RustJan-v1.5.4-win-x64.zip`. GitHubi “Source code” ZIP on arendajatele, mitte valmis rakendus.
 2. Paki **kogu ZIP** välja kirjutusõigusega kausta, näiteks `Dokumendid\RustJan`.
 3. Käivita **RustJan.exe**. Kõrval olevad failid ja `assets` kaust peavad kaasa jääma.
 4. Ava **Ühenduse seaded**, sisesta oma serveri aadress, **RCON-port** ja parool ning ühenda.
@@ -65,3 +65,5 @@ README loendur näitab Windowsi ZIP-i allalaadimisi, mitte unikaalseid inimesi e
 RustJani originaalne lähtekood on MIT-litsentsiga; kolmandate osapoolte õigused jäävad nende omanikele. Tegemist on sõltumatu projektiga, mis pole seotud Facepunch Studiosi ega Rustiga ega ole nende poolt heaks kiidetud.
 
 **Rakendus antakse kasutamiseks olemasoleval kujul ja ilma garantiita. Kasutamine toimub omal vastutusel. Kohaldatava õigusega lubatud ulatuses ei vastuta Jannu andmekao, serverikatkestuste, bännide, valede seadistuste ega muu kasutamisest tuleneva kahju eest. Sina vastutad oma serveri, varukoopiate ja kinnitatud käskude eest.** Vaata [LICENSE](LICENSE).
+
+**Serveri uuenduse kontroll:** Paigalda kaasasolev RustJanBridge 1.5.0. Ülevaade võrdleb SteamCMD manifestis olevat paigaldatud järku Steami andmetega. Päring läheb kolmanda osapoole SteamCMD API-le ja sisaldab ainult Rust Dedicated Serveri fikseeritud rakenduse ID-d. Ühenduse ajal kontrollitakse iga 15 minuti järel. Töötav versioon ja protokoll kuvatakse eraldi. Uuenda ja taaskäivita server oma tavapäraste tööriistadega.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.4
+
+- Added a read-only Rust server update check to Overview, with a manual check button and a Windows notification when a newer Steam build is available.
+- Update RustJanBridge to 1.5.0 on the server to report the installed Steam Build ID. The check runs on connection and every 15 minutes, including while in the tray.
+
 ## 1.5.3 — 2026-11-02
 
 First public portable Windows ZIP release.

@@ -1,4 +1,4 @@
-import {app,BrowserWindow,Menu,Tray,dialog,ipcMain,shell,session,screen} from 'electron';
+import {app,BrowserWindow,Menu,Tray,dialog,ipcMain,shell,session,screen,Notification} from 'electron';
 import {readFile,writeFile,mkdir,rename,appendFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -46,7 +46,13 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
  app.whenReady().then(async()=>{
   try{
    try{const p=JSON.parse(await readFile(preferencesFile,'utf8'));preferences={reconnectOnLaunch:p.reconnectOnLaunch!==false,maximized:p.maximized===true,bounds:p.bounds};}catch(e){if(e.code!=='ENOENT'&&!(e instanceof SyntaxError))throw e;}
-   runtime=await createRuntime({dataDirectory});language=runtime.settings.language==='et'?'et':'en';
+   runtime=await createRuntime({dataDirectory,onUpdateNeeded: ({name,installed,latest}) => {
+    if (!Notification.isSupported() || quitting) return;
+    const notice = new Notification({title: language === 'et' ? 'Rusti server vajab uuendust' : 'Rust server update needed',
+      body: `${name} · ${installed} → ${latest}`});
+    notice.on('click',showWindow);
+    notice.show();
+   }});language=runtime.settings.language==='et'?'et':'en';
    await new Promise((resolve,reject)=>{runtime.server.once('error',reject);runtime.server.listen(0,'127.0.0.1',()=>{runtime.server.removeListener('error',reject);resolve();});});
    origin='http://127.0.0.1:'+runtime.server.address().port;trace('started',{port:runtime.server.address().port,version:app.getVersion()});
    const icon=path.join(here,'assets','rustjan.ico');

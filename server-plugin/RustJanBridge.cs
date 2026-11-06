@@ -11,7 +11,7 @@ using Network;
 
 namespace Oxide.Plugins
 {
-    [Info("RustJan Bridge", "RustJan", "1.4.0")]
+    [Info("RustJan Bridge", "RustJan", "1.5.0")]
     [Description("Read-only RCON data for the local RustJan dashboard. No web services or credentials.")]
     public class RustJanBridge : RustPlugin
     {
@@ -26,6 +26,40 @@ namespace Oxide.Plugins
             if (arg.Connection == null) return true;
             arg.ReplyWith("RustJan commands are only available from the server console/RCON.");
             return false;
+        }
+
+        [ConsoleCommand("rustjan.build")]
+        private void SteamBuild(ConsoleSystem.Arg arg)
+        {
+            if (!ServerOnly(arg)) return;
+            var root = Directory.GetCurrentDirectory();
+            const string manifest = "appmanifest_258550.acf";
+            string[] locations = {
+                Path.Combine(root, "steamapps", manifest),
+                Path.Combine(root, manifest),
+                Path.Combine(root, "..", "steamapps", manifest),
+                Path.Combine(root, "..", "steamcmd", "steamapps", manifest)
+            };
+            foreach (string location in locations)
+            {
+                try
+                {
+                    var file = new FileInfo(location);
+                    if (!file.Exists || file.Length > 262144) continue;
+                    string content = File.ReadAllText(file.FullName);
+                    if (!Regex.IsMatch(content, "\"appid\"\\s+\"258550\"", RegexOptions.IgnoreCase)) continue;
+                    var build = Regex.Match(content, "\"buildid\"\\s+\"([1-9][0-9]{0,14})\"", RegexOptions.IgnoreCase);
+                    if (!build.Success) continue;
+                    var beta = Regex.Match(content, "\"BetaKey\"\\s+\"([^\"]*)\"", RegexOptions.IgnoreCase);
+                    string branch = beta.Success && beta.Groups[1].Value.Length > 0 ? beta.Groups[1].Value : "public";
+                    if (!Regex.IsMatch(branch, @"\A[a-zA-Z0-9_.-]{1,64}\z")) continue;
+                    arg.ReplyWith(JsonConvert.SerializeObject(new { Schema = 1, BuildId = build.Groups[1].Value, Branch = branch }));
+                    return;
+                }
+                catch (IOException) {}
+                catch (UnauthorizedAccessException) {}
+            }
+            arg.ReplyWith(JsonConvert.SerializeObject(new { Schema = 1, Error = "manifest-unavailable" }));
         }
 
         private class Tracked { public BaseEntity Entity; public string Kind; public double CreatedAt; }

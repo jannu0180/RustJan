@@ -16,6 +16,7 @@ import { Statistics } from './statistics.mjs';
 import { acquireRuntimeLock } from './runtime-lock.mjs';
 import { Extras } from './extras.mjs';
 import { DisplayRules } from './display-rules.mjs';
+import { createSteamBuildLookup } from './steam-builds.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({ monitor = new Monitor(), vault = new CredentialVault(path.join(root, 'conf')), config = null, logger = null, history = null, maps = null, statistics = null, extras = null, rules = null, iconsDirectory = path.join(root,'public','item-icons'), settings = defaults(), monitorFactory = () => new Monitor() } = {}) {
@@ -94,6 +95,7 @@ export function createApp({ monitor = new Monitor(), vault = new CredentialVault
         else if(pathname==='/api/statistics/reset'){if(!statistics||input.confirm!==true||input.expectedServerId!==requestedId||monitor.state.status==='demo'||!monitor.state.profile.host)throw Error('Statistika nullimine vajab kinnitust valitud serverile.');monitor.state.statistics=await statistics.reset(monitor.state.profile);monitor.state.statisticsError=null;monitor.state.history=[];monitor.publish();}
         else if(pathname==='/api/bridge/check'){monitor.eventsUnsupported=false;monitor.clockUnsupported=false;monitor.refreshAdmin();if(monitor.state.bridge==='rustjan'){monitor.request('rustjan.events','mapEvents');monitor.refreshClock();}}
         else if(pathname==='/api/time')monitor.refreshClock();
+        else if(pathname==='/api/server-update')monitor.checkServerUpdate(true);
         else if (pathname === '/api/servers/select') { fleet.select(input.id); await saveSettings({}); }
         else if (pathname === '/api/servers/add') { fleet.add(); await saveSettings({}); }
         else if (pathname === '/api/servers/delete') { fleet.remove(input.id); await saveSettings({}); }
@@ -143,7 +145,7 @@ export function createApp({ monitor = new Monitor(), vault = new CredentialVault
   return { server, monitor, fleet, rules, close: async () => { for (const client of clients) client.end(); fleet.destroy(); await new Promise(resolve => server.close(resolve)); const results=await Promise.allSettled([logger?.close(),history?.close(),maps?.close(),statistics?.close(),rules?.close()]);const failures=results.filter(r=>r.status==='rejected');if(failures.length)throw new AggregateError(failures.map(r=>r.reason),'Could not save all RustJan data.'); } };
 }
 
-export async function createRuntime({dataDirectory=root,exclusive=true}={}) {
+export async function createRuntime({dataDirectory=root,exclusive=true,onUpdateNeeded}={}) {
   if(typeof WebSocket!=='function')throw Error('RustJan requires Node.js 22.19 or newer.');
   dataDirectory=path.resolve(dataDirectory);
   const release=exclusive?await acquireRuntimeLock(dataDirectory):async()=>{};
@@ -154,7 +156,9 @@ export async function createRuntime({dataDirectory=root,exclusive=true}={}) {
   const config = new ConfigStore(path.join(dataDirectory, 'conf'));
   let settings = await config.load();
   if (!settings.profile && !config.loadedFromDisk) { const stored = (await vault.metadata()).profiles[0]; if (stored) settings = await config.save({ profile: stored }); }
-  const monitor = new Monitor({ country });
+  const steamLookup = createSteamBuildLookup();
+  const makeMonitor = () => new Monitor({ country, steamLookup, onUpdateNeeded });
+  const monitor = makeMonitor();
   if (settings.profile) monitor.state.profile = settings.profile;
   const logger = new SessionLogger(path.join(dataDirectory, 'logs'), { redact: value => monitor.redact(value) });
   logger.configure(settings.logging);
@@ -166,7 +170,7 @@ export async function createRuntime({dataDirectory=root,exclusive=true}={}) {
   const rules=new DisplayRules(files,path.join(dataDirectory,'conf','sounds'),path.join(root,'public','sounds'));
   const externalIcons=path.join(dataDirectory,'assets','item-icons');
   const iconsDirectory=await access(externalIcons).then(()=>externalIcons).catch(()=>path.join(root,'public','item-icons'));
-  app = createApp({ monitor, vault, config, logger, history, maps, statistics, extras:new Extras(files), rules, iconsDirectory, settings, monitorFactory: () => new Monitor({ country }) });
+  app = createApp({ monitor, vault, config, logger, history, maps, statistics, extras:new Extras(files), rules, iconsDirectory, settings, monitorFactory: makeMonitor });
   const {server,close}=app;
 
   let closePromise;
