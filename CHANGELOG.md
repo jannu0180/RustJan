@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.5
+
+- Country Guard 1.1.0 saves rejected IP addresses permanently on each server and lists them separately from Steam account bans in the desktop app.
+- Optional Linux nftables sync preserves and applies these IP blocks even when Country Guard or Oxide is down.
+
 ## 1.5.4
 
 - Added a read-only Rust server update check to Overview, with a manual check button and a Windows notification when a newer Steam build is available.

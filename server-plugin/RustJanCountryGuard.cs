@@ -2,18 +2,23 @@ using System;
 using System.IO;
 using System.Net;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Oxide.Core;
 
 namespace Oxide.Plugins
 {
-    [Info("RustJan Country Guard", "Jannu / RustJan", "1.0.2")]
-    [Description("Offline IPv4/IPv6 country access rules. Rejects connections without permanent Steam bans.")]
+    [Info("RustJan Country Guard", "Jannu / RustJan", "1.1.0")]
+    [Description("Offline country rules with permanent, server-local IP blocks.")]
     public class RustJanCountryGuard : RustPlugin
     {
         private Settings settings;
         private Range[] ipv4 = new Range[0], ipv6 = new Range[0];
         private bool ready;
+        private readonly Dictionary<string, IpBlock> blocks = new Dictionary<string, IpBlock>();
+        private bool canWriteBlocks;
+        private class IpBlock { public string IP, Country, Reason, CreatedAt; }
+        private string BlockFile { get { return Path.Combine(Interface.Oxide.DataDirectory, "RustJanCountryGuard", "ip-blocks.jsonl"); } }
         private class Settings
         {
             public bool Enabled = true;
@@ -81,7 +86,34 @@ namespace Oxide.Plugins
             if (rows.Count == 0) throw new Exception("Empty country database");
             return rows.ToArray();
         }
-        private void Init() { LoadDatabase(); }
+        private void Init()
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(BlockFile));
+                if (File.Exists(BlockFile))
+                    foreach (string line in File.ReadLines(BlockFile))
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        var block = JsonConvert.DeserializeObject<IpBlock>(line);
+                        if (block == null || CanonicalIp(block.IP) != block.IP || string.IsNullOrEmpty(block.IP) ||
+                            string.IsNullOrEmpty(block.Reason) || string.IsNullOrEmpty(block.CreatedAt))
+                            throw new IOException("Invalid permanent IP block record.");
+                        blocks[block.IP] = block;
+                    }
+                canWriteBlocks = true;
+            }
+            catch (Exception error) { PrintError("Permanent IP list could not be fully loaded: " + error.Message); }
+            LoadDatabase();
+        }
+
+        private static string CanonicalIp(string text)
+        {
+            IPAddress address;
+            if (!IPAddress.TryParse(text, out address)) return null;
+            if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
+            return new IPAddress(address.GetAddressBytes()).ToString();
+        }
         private void LoadDatabase()
         {
             try
@@ -114,12 +146,43 @@ namespace Oxide.Plugins
         }
         private object CanUserLogin(string name, string id, string ipAddress)
         {
+            string ip = CanonicalIp(ipAddress);
+            IpBlock existing;
+            if (ip != null && blocks.TryGetValue(ip, out existing)) return existing.Reason;
             if (!settings.Enabled || settings.AllowedSteamIds.Contains(id)) return null;
-            string country = Country(ipAddress);
+            string country = Country(ip);
             string reason = country != null && settings.BlockedCountries.Contains(country) ? settings.RejectionReason.Replace("{country}", country) : null;
             if (reason == null) return null;
+            if (canWriteBlocks && ip != null)
+            {
+                var block = new IpBlock { IP = ip, Country = country, Reason = reason, CreatedAt = DateTime.UtcNow.ToString("o") };
+                try
+                {
+                    byte[] row = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(block, Formatting.None) + "\n");
+                    using (var stream = new FileStream(BlockFile, FileMode.Append, FileAccess.Write, FileShare.Read))
+                    {
+                        stream.Write(row, 0, row.Length);
+                        stream.Flush(true);
+                    }
+                    blocks[ip] = block;
+                }
+                catch (Exception error)
+                {
+                    canWriteBlocks = false;
+                    PrintError("Could not save permanent IP block: " + error.Message);
+                }
+            }
             if (settings.LogRejections) LogToFile("rejections", DateTime.UtcNow.ToString("o") + " SteamID=" + id + " IP=" + ipAddress + " Country=" + (country ?? "unknown") + " Reason=" + reason.Replace("\r", " ").Replace("\n", " "), this);
             return reason;
+        }
+
+        [ConsoleCommand("rustjan.countrybans")]
+        private void CountryBans(ConsoleSystem.Arg arg)
+        {
+            if (arg.Connection != null) return;
+            arg.ReplyWith(JsonConvert.SerializeObject(new { Schema = 1, Total = blocks.Count,
+                StorageReady = canWriteBlocks,
+                Blocks = blocks.Values.OrderByDescending(b => b.CreatedAt, StringComparer.Ordinal).Take(250).ToArray() }));
         }
         [ConsoleCommand("rustjan.country")]
         private void CountryCommand(ConsoleSystem.Arg arg)

@@ -2,7 +2,7 @@
 
 **Your Rust server, under control.** A local Windows desktop dashboard, vibe coded by **Jannu** for his own server administration needs.
 
-[![Latest ZIP downloads](https://img.shields.io/github/downloads/jannu0180/RustJan/v1.5.4/RustJan-v1.5.4-win-x64.zip?label=Windows%20ZIP%20downloads)](https://github.com/jannu0180/RustJan/releases/latest)
+[![Latest ZIP downloads](https://img.shields.io/github/downloads/jannu0180/RustJan/v1.5.5/RustJan-v1.5.5-win-x64.zip?label=Windows%20ZIP%20downloads)](https://github.com/jannu0180/RustJan/releases/latest)
 [![Tests](https://github.com/jannu0180/RustJan/actions/workflows/test.yml/badge.svg)](https://github.com/jannu0180/RustJan/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/source-MIT-green.svg)](LICENSE)
 
@@ -29,7 +29,7 @@ Screenshots below use a separate demo with fictional players and documentation-o
 
 ## Install and run
 
-1. Open **[Releases](https://github.com/jannu0180/RustJan/releases)** and download `RustJan-v1.5.4-win-x64.zip` under **Assets**. GitHub's automatic “Source code” ZIP is for developers, not the ready-to-run application.
+1. Open **[Releases](https://github.com/jannu0180/RustJan/releases)** and download `RustJan-v1.5.5-win-x64.zip` under **Assets**. GitHub's automatic “Source code” ZIP is for developers, not the ready-to-run application.
 2. Extract the **whole ZIP** into a writable folder, for example `Documents\RustJan`.
 3. Run **`RustJan.exe`** inside the extracted folder. Keep its companion files and `assets` folder together.
 4. Open **Connection settings**, enter your server address, **RCON port** and RCON password, then connect. The game/query/Rust+ ports are separate and do not replace the RCON port.
@@ -116,7 +116,7 @@ node scripts/fetch-icons.mjs
 npm.cmd ci --prefix desktop
 node desktop/build.mjs out/RustJan
 node scripts/prepare-bundle.mjs out/RustJan
-Compress-Archive -Path out/RustJan -DestinationPath out/RustJan-v1.5.4-win-x64.zip
+Compress-Archive -Path out/RustJan -DestinationPath out/RustJan-v1.5.5-win-x64.zip
 ```
 
 Item artwork is fetched once from Facepunch's asset host and checked against the manifest. It is omitted from Git history to keep source clones smaller, but included locally in the release ZIP. See [third-party notices](THIRD_PARTY_NOTICES.md). The `Build release` workflow builds a portable ZIP for version tags; publishing remains under the owner's GitHub permissions.

@@ -404,6 +404,16 @@ Riik pole teada / kohalik IP|Country unknown / local IP
     ['SteamCMD manifesti ei leitud','SteamCMD manifest not found'],
     ['Järgunumbrid erinevad','Build IDs differ'],['Ootab serveriühendust','Waiting for server connection']
   ]) dictionary.set(et,en);
+  for(const [et,en] of [
+    ['Country Guardi IP-bännid','Country Guard IP blocks'],
+    ['Püsivad IP-piirangud · kuni 250 viimast kirjet','Permanent IP blocks · latest 250 entries'],
+    ['Country Guard ei saa uusi IP-bänne salvestada.','Country Guard cannot save new IP blocks.'],
+    ['Otsingule vastavaid IP-bänne pole.','No IP blocks match your search.'],
+    ['IP-bänniloend on tühi.','The IP block list is empty.'],
+    ['IP-bänniloend vajab serveris Country Guard 1.1.0 pluginat.','The IP block list requires Country Guard 1.1.0 on the server.'],
+    ['Nimi, SteamID, IP või põhjus…','Name, SteamID, IP or reason…'],
+    ['RIIK','COUNTRY'],['LISATUD','ADDED']
+  ]) dictionary.set(et,en);
   let language=localStorage.getItem('rustjan-language')==='et'?'et':'en';
   window.rustjanText = value => language==='en' ? english(value) : value;
   const originals=new WeakMap(), attributes=new WeakMap();
@@ -438,7 +448,7 @@ Riik pole teada / kohalik IP|Country unknown / local IP
     observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','aria-label','placeholder']});
   }
   document.querySelector('.sidebar-bottom').insertAdjacentHTML('afterbegin','<div class="sidebar-tools"><select id="language-select" aria-label="Language / Keel"><option value="en">English</option><option value="et">Eesti</option></select><button id="about-button">About</button></div>');
-  document.body.insertAdjacentHTML('beforeend','<dialog id="about-dialog"><div class="about-author"><img src="/jannu.png" width="130" height="155" alt="Jannu"><div><h2>RustJan</h2><span>Jannu</span></div></div><p id="about-description"></p><p id="about-disclaimer"></p><p id="about-privacy"></p><p><a id="about-github" href="https://github.com/jannu0180/RustJan" target="_blank" rel="noopener noreferrer">GitHub · RustJan</a></p><small>v1.5.4 · Jannu · 2026</small><div class="dialog-actions"><button class="button primary" id="about-close"></button></div></dialog>');
+  document.body.insertAdjacentHTML('beforeend','<dialog id="about-dialog"><div class="about-author"><img src="/jannu.png" width="130" height="155" alt="Jannu"><div><h2>RustJan</h2><span>Jannu</span></div></div><p id="about-description"></p><p id="about-disclaimer"></p><p id="about-privacy"></p><p><a id="about-github" href="https://github.com/jannu0180/RustJan" target="_blank" rel="noopener noreferrer">GitHub · RustJan</a></p><small>v1.5.5 · Jannu · 2026</small><div class="dialog-actions"><button class="button primary" id="about-close"></button></div></dialog>');
   function about(){document.getElementById('about-button').textContent=language==='en'?'About':'Rakendusest';document.getElementById('about-description').textContent=language==='en'?'Vibe coded by Jannu for his own needs: a local dashboard for monitoring and administering Rust servers.':'Jannu poolt enda vajaduste järgi vibe-kooditud kohalik juhtpaneel Rusti serverite jälgimiseks ja haldamiseks.';document.getElementById('about-disclaimer').textContent=language==='en'?'Provided as is, without warranty. Use at your own risk. Jannu accepts no responsibility for data loss, server downtime or damage resulting from use. Check commands and permissions before confirming actions. This is an independent project, not affiliated with Facepunch Studios or Rust.':'Rakendus on kasutamiseks olemasoleval kujul ja ilma garantiita. Kasutamine toimub omal vastutusel. Jannu ei vastuta andmekao, serveri katkestuste ega kasutamisest tekkiva kahju eest. Enne toimingu kinnitamist kontrolli käske ja õigusi. Tegemist on sõltumatu projektiga, mis pole seotud Facepunch Studiosi ega Rustiga.';document.getElementById('about-privacy').textContent=language==='en'?'Your settings, saved credentials and log files are stored on your own computer. RustJan has no analytics or telemetry and does not send your data to Jannu or third-party services. When connected, credentials and commands are sent only to the Rust server you choose. Password storage and file logging are optional.':'Sinu seaded, salvestatud ühendusandmed ja logifailid asuvad sinu enda arvutis. RustJan ei kasuta analüütikat ega telemeetriat ning ei saada sinu andmeid Jannule ega kolmandate osapoolte teenustesse. Ühenduse loomisel saadetakse parool ja käsud ainult sinu valitud Rusti serverile. Parooli salvestamine ja faililogimine on vabatahtlikud.';document.getElementById('about-close').textContent=language==='en'?'Close':'Sulge';}
   const observer=new MutationObserver(()=>translate());
   document.getElementById('language-select').value=language;

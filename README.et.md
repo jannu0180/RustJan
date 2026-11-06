@@ -6,7 +6,7 @@ Jannu enda vajaduste järgi vibe-kooditud **kohalik Rusti serveri haldusrakendus
 
 ## Käivitamine
 
-1. Ava Releases ja laadi **Assets** alt alla `RustJan-v1.5.4-win-x64.zip`. GitHubi “Source code” ZIP on arendajatele, mitte valmis rakendus.
+1. Ava Releases ja laadi **Assets** alt alla `RustJan-v1.5.5-win-x64.zip`. GitHubi “Source code” ZIP on arendajatele, mitte valmis rakendus.
 2. Paki **kogu ZIP** välja kirjutusõigusega kausta, näiteks `Dokumendid\RustJan`.
 3. Käivita **RustJan.exe**. Kõrval olevad failid ja `assets` kaust peavad kaasa jääma.
 4. Ava **Ühenduse seaded**, sisesta oma serveri aadress, **RCON-port** ja parool ning ühenda.

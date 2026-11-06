@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep RustJan Country Guard blocks active independently of Oxide
+
+[Timer]
+OnBootSec=1s
+OnUnitActiveSec=30s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

@@ -120,7 +120,7 @@ export function createApp({ monitor = new Monitor(), vault = new CredentialVault
         else if (pathname === '/api/refresh') { monitor.refresh(); monitor.refreshAdmin(); }
         else if (pathname === '/api/command') monitor.command(input.command);
         else if (pathname === '/api/chat') monitor.sendChat(input.message);
-        else if (pathname === '/api/admin/refresh') monitor.refreshAdmin();
+        else if (pathname === '/api/admin/refresh') { monitor.refreshAdmin(); if (monitor.views.has('bans') && monitor.state.status === 'connected') monitor.request('rustjan.countrybans','countryBans'); }
         else if (pathname === '/api/plugins/action') monitor.pluginAction(input);
         else if (pathname === '/api/players/action') monitor.playerAction(input);
         else if (pathname === '/api/map/load') monitor.loadMap();

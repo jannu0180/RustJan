@@ -1,0 +1,15 @@
+[Unit]
+Description=Apply RustJan Country Guard permanent IP blocks
+After=nftables.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/rustjan-countryguard.conf
+ExecStart=/usr/bin/python3 /usr/local/libexec/rustjan-countryguard-sync.py --journal \${JOURNAL} --port \${GAME_PORT}
+StateDirectory=rustjan-countryguard
+StateDirectoryMode=0700
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes

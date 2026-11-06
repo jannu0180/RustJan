@@ -1,7 +1,7 @@
-RUSTJAN COUNTRY GUARD 1.0.2
+RUSTJAN COUNTRY GUARD 1.1.0
 
 EESTI
-See on eraldi Oxide/uMod Rusti serveriplugin, mitte RustJani EXE uuendus.
+See on eraldi Oxide/uMod Rusti serveriplugin, ning IP-bännide vaatamiseks on vaja RustJan 1.5.5 või uuemat.
 RustJanBridge.cs ei ole vaja asendada. RustJan ei pea selle plugina töötamiseks avatud olema.
 
 PAIGALDUS LINUXI SERVERIS
@@ -77,3 +77,14 @@ on a failed update. Rules apply to new login attempts, not players already onlin
 Lookup is offline and covers IPv4/IPv6. Geolocation can be inaccurate; VPNs may
 bypass location rules. Update the numerical CSV files periodically using the URLs
 in SOURCES.txt. Compilation against your actual Rust/Oxide server is still required.
+
+PÜSIVAD IP-BÄNNID / PERMANENT IP BLOCKS
+Uued tõrjutud IP-d salvestatakse koos põhjusega faili
+oxide/data/RustJanCountryGuard/ip-blocks.jsonl. Vanad tõrjelogid ei lähe
+automaatselt loendisse. RustJan kuvab kirjeid Bans-vaates eraldi.
+Et tõrje jätkuks ka Oxide'i seiskumisel, paigalda Linuxi tulemüüri sünk:
+country-guard-firewall/README.md.
+
+Newly rejected IPs and reasons are saved in the above server-local journal.
+The RustJan Bans view displays them separately from account bans.
+For enforcement independent of Oxide, install the Linux firewall sync.

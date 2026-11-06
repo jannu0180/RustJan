@@ -75,6 +75,7 @@ export class Monitor extends EventEmitter {
     if (socket) { try { socket.close(); } catch {} }
   }
   disconnect({ quiet = false } = {}) {
+    this.state.countryBans = null;
     this.state.serverUpdate = null;
     this.buildCheckedAt = null;
     this.generation++;
@@ -148,6 +149,7 @@ export class Monitor extends EventEmitter {
       else if(kind==='mapEvents'){this.eventsUnsupported=true;this.state.mapEvents={supported:false,items:[],error:'RustJanBridge events request timed out. Update or reload the plugin.'};this.publish();}
       else if(kind==='clock'){this.state.gameClock=null;this.publish();}
       else if (kind === 'steamBuild') void this.finishBuildCheck(null, meta.force);
+      else if (kind === 'countryBans') { this.state.countryBans = null; this.publish(); }
       else if(kind==='mapLayers'){this.layersUnsupported=true;this.state.mapLayers={supported:false,error:'Layer request timed out. Update RustJanBridge to 1.4.0.'};this.publish();}
       else if(kind==='items'){this.state.itemsError='Item catalogue request timed out.';this.publish();}
       else if (kind === 'serverField') { this.state.info[meta.field] = null; this.publish(); }
@@ -177,7 +179,7 @@ export class Monitor extends EventEmitter {
     if((has('plugins')||has('map'))&&due('plugins',30000)){this.pollTimes.plugins=at;if(this.state.framework.installed)this.request('oxide.plugins','plugins');}
     if(has('map')&&this.state.bridge==='rustjan'&&!this.eventsUnsupported&&due('events',Math.min(interval,3000))){this.pollTimes.events=at;this.request('rustjan.events','mapEvents');}
     if(has('map')&&this.state.bridge==='rustjan'&&!this.layersUnsupported&&(this.mapLayers?.sleepers||this.mapLayers?.cupboards)&&due('layers',15000)){this.pollTimes.layers=at;this.request('rustjan.layers '+(this.mapLayers.sleepers?'1':'0')+' '+(this.mapLayers.cupboards?'1':'0'),'mapLayers');}
-    if(has('bans')&&due('bans',30000)){this.pollTimes.bans=at;this.request('banlistex','bans');}
+    if(has('bans')&&due('bans',30000)){this.pollTimes.bans=at;this.request('banlistex','bans');this.request('rustjan.countrybans','countryBans');}
     }catch(e){this.log('warning',e.message);}
   }
   checkServerUpdate(force = false) {
@@ -300,6 +302,20 @@ export class Monitor extends EventEmitter {
   }
   receiveAdmin(pending, message) {
     if (pending.kind === 'steamBuild') { void this.finishBuildCheck(message, pending.force); return true; }
+    if (pending.kind === 'countryBans') {
+      try {
+        const data = JSON.parse(message);
+        if (data.Schema !== 1 || !Array.isArray(data.Blocks)) throw Error();
+        this.state.countryBans = {
+          total: Math.max(0, Number(data.Total) || 0), writable: data.StorageReady === true,
+          rows: data.Blocks.slice(0, 250).filter(row => row && typeof row.IP === 'string').map(row => ({
+            ip: text(row.IP, 64), country: text(row.Country, 2), reason: text(row.Reason, 512), date: text(row.CreatedAt, 40)
+          }))
+        };
+      } catch { this.state.countryBans = null; }
+      this.publish();
+      return true;
+    }
     const kind = pending.kind;
     if(kind==='mapLayers'){try{const data=JSON.parse(message);if(data.Schema!==1)throw Error('Update RustJanBridge to 1.4.0');const pos=p=>p&&Number.isFinite(Number(p.x))&&Number.isFinite(Number(p.z));this.state.mapLayers={...this.mapLayers,supported:true,sleepers:(data.Sleepers||[]).slice(0,10000).filter(p=>pos(p.Position)).map(p=>({id:String(p.SteamID).slice(0,30),name:text(p.DisplayName,120),position:p.Position})),cupboards:(data.Cupboards||[]).slice(0,10000).filter(p=>pos(p.Position)).map(p=>({id:text(p.Id,40),owner:text(p.Owner,30),position:p.Position})),truncated:data.Truncated===true};}catch{this.layersUnsupported=true;this.state.mapLayers={supported:false,error:'Sleepers and TC layers require RustJanBridge 1.4.0.'};}this.publish();return true;}
     if(kind==='items'){try{const list=JSON.parse(message);if(!Array.isArray(list))throw Error();this.state.items=list.slice(0,5000).filter(i=>/^[a-zA-Z0-9_.-]+$/.test(i.shortname)).map(i=>({shortname:i.shortname,name:text(i.name,150),category:text(i.category,60)}));this.state.itemsError=null;}catch{this.state.itemsError='Server item catalogue requires RustJanBridge 1.4.0.';}this.publish();return true;}
